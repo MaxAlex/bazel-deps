@@ -551,6 +551,30 @@ object Language {
     val default: Scala = Scala(Version("2.11.11"), true)
   }
 
+  case class ScalaJS(sjsV: Version, scalaV: Version) extends Language {
+    def asString = "scalajs"
+    def asOptionsString: String = s"scalajs:${sjsV.asString}-${scalaV.asString}"
+    def asReversableString: String = s"${asString}:${sjsV.asString}-${scalaV.asString}"
+
+    private val suffix = s"_sjs${sjsV}_${scalaV}"
+    private def add(a: MavenArtifactId): MavenArtifactId = a.addSuffix(suffix)
+
+    // This is copied wholesale from Scala, seems to match JavaLike, aside from add()?
+    def unversioned(g: MavenGroup, a: ArtifactOrProject): UnversionedCoordinate =
+      UnversionedCoordinate(g, add(MavenArtifactId(a)))
+
+    def unversioned(g: MavenGroup, a: ArtifactOrProject, sp: Subproject): UnversionedCoordinate =
+      UnversionedCoordinate(g, add(MavenArtifactId(a, sp)))
+
+    def mavenCoord(g: MavenGroup, a: ArtifactOrProject, v: Version): MavenCoordinate =
+      MavenCoordinate(g, add(MavenArtifactId(a)), v)
+
+    def mavenCoord(g: MavenGroup, a: ArtifactOrProject, sp: Subproject, v: Version): MavenCoordinate =
+      MavenCoordinate(g, add(MavenArtifactId(a, sp)), v)
+
+    def unmangle(m: MavenCoordinate): MavenCoordinate = m
+  }
+
   implicit val ordering: Ordering[Language] = Ordering.by(_.asString)
 }
 
